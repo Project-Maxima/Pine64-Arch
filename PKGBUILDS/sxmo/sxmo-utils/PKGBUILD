@@ -1,138 +1,144 @@
-# Maintainer: dni <office@dnilabs.com>
 # Maintainer: Aren <aren@peacevolution.org>
+# Contributor: dni <office@dnilabs.com>
 
-pkgname=('sxmo-utils' 'sxmo-ui-sway-meta' 'sxmo-ui-dwm-meta')
-pkgver=1.8.2
-pkgrel=2
-pkgdesc="Utility scripts, programs, and configs that hold the Sxmo UI environment together"
+pkgname=('sxmo-utils' 'sxmo-utils-sway' 'sxmo-utils-dwm')
+pkgver=1.15.2
+pkgrel=1
+pkgdesc="Utility scripts, programs, and configs that hold the sxmo UI environment together"
 url="https://git.sr.ht/~mil/sxmo-utils"
 arch=('x86_64' 'armv7h' 'aarch64')
-license=('MIT')
-makedepends=('libx11' 'xorgproto' 'linux-headers')
+license=('AGPL3')
+makedepends=('libx11' 'xorgproto' 'linux-headers' 'busybox' 'scdoc')
 install=sxmo-utils.install
+# There have been quite a few bugfixes since the 1.15.1 release, this is about
+# 20 commits ahead of the release so we don't have to carry patches for all of
+# them. There is a 1.15.2 release coming soon that will include these.
 source=("$pkgname-$pkgver.tar.gz::https://git.sr.ht/~mil/sxmo-utils/archive/$pkgver.tar.gz"
-        '0001-Let-systemd-handle-service-supervision.patch'
-        'rootfs-etc-NetworkManager-conf.d-00-sxmo.conf'
-        'rootfs-etc-polkit-1-rules.d-00-sxmo.rules'
-        'rootfs-etc-polkit-1-rules.d-50-org.freedesktop.NetworkManager.rules'
+        '0001-avoid-conflicting-with-systemd-services.patch'
+        '0002-Partially-revert-7a77851c.patch'
+        '00-sxmo.rules'
+        '10-sxmo.conf'
         'sxmo-setpermissions.service')
-backup=('etc/doas.conf')
+sha512sums=('ee68b67a0d136a7a70b896d9ad4217d23f54022faca59c9ac241f1948c6a203453595569278e5909fa631e3855fcf0560efa7012ad9d201f1819fd65bd7b0500'
+            '2a11f00fa5f508a0a5af3fb28730317de1cc99bb340ef724e5566aaa9bccec44563da3094028e8f447db63500bbedf46c25c1db250abf771f2e3549038e59224'
+            'd327fcc2abdc25889f650d7c47a6b9cc67e85539954b45d4097ff9bffb75133244ea8b0d96339f9c3280a544395dcc9b96d59c6a9a117b7f685afe5123d377eb'
+            'd705fc9611716a73c89da94bf3abc9292e9069bc994b0bd097159f4babd83d4693d5cc3e42336739ac46a8c6b4a0f39d077047202901dc5066df75e597450fa7'
+            'b69a09f98f8a5cad8164cd48c5f6a78f2ce0e9818fb77ccf2a3e243cd0f2023e438022b20aad9e6b5edd90e1bb862326db79dc423630682d4c43e897090d3da1'
+            '532c3045f52f872704876bdf56afbc7470c5d17e46655dd4040d545b6d3eb34a8791909e554c560471f9494c7382107839bcff1e48be242d5eea0092482165cd')
 
 prepare() {
   cd "$pkgname-$pkgver"
 
-  # Use systemd to start & stop user services
-  # TODO: this should be upstreamed
-  sed -e 's/sxmo_daemons.sh start mmsd.*$/systemctl --user start mmsd-tng.service/g' \
-      -e 's/sxmo_daemons.sh stop mmsd/systemctl --user stop mmsd-tng.service/g' \
-      -i scripts/core/sxmo_mmsdconfig.sh
-  sed -i 's/.*mmsdtng.*/:/' configs/default_hooks/start
+  patch -p1 < '../0001-avoid-conflicting-with-systemd-services.patch'
+  patch -p1 < '../0002-Partially-revert-7a77851c.patch'
+}
 
-  sed -e 's/sxmo_daemons.sh start vvmd.*$/systemctl --user start vvmd.service/g' \
-      -e 's/sxmo_daemons.sh stop vvmd/systemctl --user stop vvmd.service/g' \
-      -i scripts/core/sxmo_vvmdconfig.sh
-  sed -i 's/.*vvmd.*/:/' configs/default_hooks/start
+build() {
+  cd "$pkgname-$pkgver"
 
-  patch -p1 < '../0001-Let-systemd-handle-service-supervision.patch'
-
-  # A quick hack becaue $XDG_RUNTIME_DIR contains some files that aren't
-  # accessable to the default user, which causes the dialer to fail
-  sed -i '/^set -e$/d' scripts/modem/sxmo_modemdial.sh
-
-  # Don't start a dbus session when starting sxmo
-  sed -i 's@dbus-run-session@@g' scripts/core/sxmo_winit.sh
-  sed -i 's@dbus-run-session@@g' scripts/core/sxmo_xinit.sh
+  make
 }
 
 package_sxmo-utils() {
+  backup=('etc/doas.conf')
   depends=(
-    # Core cli dependencies
-    'alsa-utils'
-    'bluez'
-    'bluez-utils'
-    'busybox'
+    # Shell utilities
+    'bc'
     'curl'
-    'doas'
-    'ffmpeg'
     'gawk'
-    'geoclue'
-    'inotify-tools'
     'gojq'
+    'less'
+    'net-tools' # netstat command
+    'pnc'
+
+    # Core dependcies
+    'callaudiod'
+    'opendoas'
+    'geoclue'
+    'iio-utils'
+    'inotify-tools'
     'mmsd-tng'
     'mnc' # for suspend
     'modemmanager'
     'ncurses' # for the weather script
     'networkmanager'
-    'pn'
-    'v4l-utils'
+    'superd'
     'vvmd'
+    'xdg-user-dirs'
+
+    # Audio
+    # TODO: alsa-utils is only required for sxmo_record.sh, it can probably be
+    # removed soon
+    'alsa-utils'
+    'bluez'
+    'bluez-utils'
+    'libpulse'
+    'pulseaudio'
+    'pulseaudio-alsa'
 
     # Core GUI dependencies
-    'sxmo-ui'
+    'brightnessctl'
+    'conky'
     'dunst'
     'libnotify'
-    'light'
     'lisgd'
-    'mediainfo'
     'mpv'
-    'nerd-fonts-fira-mono' # system font
-    'nerd-fonts-terminus'
-    'bemenu'
-    'bemenu-wayland')
-  optdepends=('clickclack: haptic feedback'
+    'sxmo-ui'
+    'ttf-dejavu-nerd'
+    'upower')
+  optdepends=('bemenu-ncurses: sxmo menus over ssh'
+              'bonsai: better multikey script'
+              'clickclack: haptic feedback'
               'codemadness-frontends: Youtube & Reddit scripts'
+              'j4-dmenu-desktop: all apps menu generated from .desktop files'
+              'mediainfo: sound recorder'
+              'pipewire-pulse: recommended sound server'
               'sfeed: Rss and atom feeds'
               'vim: The default editor'
               'yt-dlp: Play videos from the web')
 
-  cd "$pkgname-$pkgver"
+  make -C "$pkgname-$pkgver" \
+    OPENRC=0 \
+    DESTDIR="$pkgdir" \
+    EXTERNAL_SERVICES=0 \
+    install-scripts install-docs
 
-  mkdir -p "$pkgdir/etc/modules-load.d/"
-  printf %b "snd-aloop" > "$pkgdir/etc/modules-load.d/sxmo.conf"
-  mkdir -p "$pkgdir/etc/modprobe.d/"
-  printf %b "options snd slots=,snd-aloop" > "$pkgdir/etc/modprobe.d/sxmo.conf"
+  # Allow access to ModemManager and NetworkManager
+  install -Dm644 -t "$pkgdir/usr/share/polkit-1/rules.d" "00-sxmo.rules"
 
-  make DESTDIR="$pkgdir" install
+  # Prevent logind from handling the power button
+  install -Dm644 -t "$pkgdir/etc/systemd/logind.conf.d" "10-sxmo.conf"
 
-  # TODO: these should be installe to /usr if possible
-  install -Dm644 "$srcdir/rootfs-etc-NetworkManager-conf.d-00-sxmo.conf" "$pkgdir/etc/NetworkManager/conf.d/00-sxmo.conf"
-  install -Dm755 "$srcdir/rootfs-etc-polkit-1-rules.d-00-sxmo.rules" "$pkgdir/etc/polkit-1/rules.d/00-sxmo.rules"
-  install -Dm755 "$srcdir/rootfs-etc-polkit-1-rules.d-50-org.freedesktop.NetworkManager.rules" "$pkgdir/etc/polkit-1/rules.d/50-org.freedesktop.NetworkManager.rules"
+  # Fixup mode to match polkit
+  install -d -o root -g 102 -m 750 "$pkgdir/usr/share/polkit-1/rules.d"
 
-  # fix directory permissions
-  # TODO: should be done upstream
-  chmod 750 "$pkgdir/etc/polkit-1/rules.d"
+  # fix directory permissions, TODO this should be done upstream
   chmod 750 "$pkgdir/etc/doas.d"
 
+  # set the sxmo version, releases have a chronic issue of not updating this
+  echo "$pkgver" > "$pkgdir/usr/share/sxmo/version"
+
   # HACK: doas is built without --with-doas-confdir so install the sxmo config directly
-  echo "permit :wheel" > "$pkgdir/etc/doas.conf"
-  cat "$pkgdir/etc/doas.d/sxmo.conf" >> "$pkgdir/etc/doas.conf"
+  install -Dm640 "$pkgdir/etc/doas.d/sxmo.conf" "$pkgdir/etc/doas.conf"
 
   install -Dm644 "$srcdir/sxmo-setpermissions.service" "$pkgdir/usr/lib/systemd/system/sxmo-setpermissions.service"
-
-  # Remove openrc components that aren't used on arch
-  rm -r "$pkgdir/etc/init.d"
-
-  # Remove session files, and only install them we install the ui package
-  rm -r "$pkgdir/usr/share/wayland-sessions/"
-  rm -r "$pkgdir/usr/share/xsessions/"
 }
 
-package_sxmo-ui-sway-meta() {
-  pkgdesc="Packages required to use sway as a ui for sxmo"
+package_sxmo-utils-sway() {
+  pkgdesc="Use sway as the window manager with sxmo"
   url="https://sr.ht/~mil/Sxmo/"
   arch=('any')
   provides=('sxmo-ui')
+  replaces=('sxmo-ui-sway-meta')
   install=
-  depends=('foot'
+  depends=('bemenu-wayland'
+           'foot'
            'grim'
            'mako'
-           'seatd'
            'slurp'
            'sway'
            'swaybg'
            'swayidle'
-           'wayout'
            'wl-clipboard'
            'wob'
            'wtype'
@@ -140,22 +146,18 @@ package_sxmo-ui-sway-meta() {
            'xorg-xwayland')
   optdepends=('sxmo-sway: better touch event handling')
 
-  install -Dm644 "$pkgbase-$pkgver/configs/applications/swmo.desktop" \
-    "$pkgdir/usr/share/wayland-sessions/swmo.desktop"
+  make -C "$pkgbase-$pkgver" DESTDIR="$pkgdir" install-sway
 }
 
-package_sxmo-ui-dwm-meta() {
+package_sxmo-utils-dwm() {
   pkgdesc="Packages required to use dwm as a ui for sxmo"
   url="https://sr.ht/~mil/Sxmo/"
   arch=('any')
   provides=('sxmo-ui')
+  replaces=('sxmo-ui-dwm-meta')
   install=
   depends=('autocutsel'
-           'conky'
            'feh'
-           'ttf-dejavu' # for conky
-           'otf-latin-modern' # for conky
-           'terminus-font' # dmenu & xcalc
            'svkbd'
            'sxiv'
            'sxmo-dmenu'
@@ -176,13 +178,5 @@ package_sxmo-ui-dwm-meta() {
            'xorg-xwininfo'
            'xprintidle')
 
-  install -Dm644 "$pkgbase-$pkgver/configs/applications/sxmo.desktop" \
-    "$pkgdir/usr/share/xsessions/sxmo.desktop"
+  make -C "$pkgbase-$pkgver" DESTDIR="$pkgdir" install-dwm
 }
-
-sha512sums=('998577f8bb35dde66a0f6054f9d8c3869d2d656318bb43be4e813bb57658a4b949cb39c8e490958104204b45203a4bfc4a27b556273e58a19fa42cc52314968d'
-            'abc5ccd74157f1188f2d43370d228a498017cb2a2e17aec131ab34329d95ed76d7323bf1d802754574c26a2463ffe4f426e0ac567e115f581bee8b0bcf9b64cd'
-            '67a031f309a3232ac1e8abc3fedeaee912c035f9c81b4f709248895905a27ab5844ec92c65e55b79af3894450ba3883549d4004f11efebb47114d41f730e4a5f'
-            '6e42f9acc015a21596cdf2d35eb5a80e8fbe97959aabf129861c8e1016bbebad5c706126730515494a0fcb33ad38fd6cd971048d2b5340557a803febf41967a4'
-            '4c8f047c4608d89409a44db6370ca225d42e186323f42d0c564edb34f18c84a69a500a89cc2c31d5f0e5c292aa94ea20eaf8213e3e266b8f9e959c3d4ce9fb58'
-            '532c3045f52f872704876bdf56afbc7470c5d17e46655dd4040d545b6d3eb34a8791909e554c560471f9494c7382107839bcff1e48be242d5eea0092482165cd')

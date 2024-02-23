@@ -1,18 +1,40 @@
 # Maintainer: Danct12 <danct12@disroot.org>
 pkgname=phosh
-pkgver=0.16.0
+pkgver=0.36.0
 pkgrel=1
-pkgdesc="The Librem5 Shell"
+pkgdesc="A Wayland shell for GNOME on mobile devices."
 arch=('x86_64' 'armv7h' 'aarch64')
 url="https://gitlab.gnome.org/World/Phosh/phosh"
 license=('GPL')
-depends=('gtk3' 'libhandy>=1.1.90' 'gnome-desktop' 'gnome-session' 'gnome-shell' 'upower' 'libpulse'
-         'gcr' 'feedbackd' 'libnm' 'phoc' 'callaudiod')
-makedepends=('meson' 'ninja' 'git')
-_commit="f1ad6df16774c97c905b9cdc899a68d12d95ae6b"  # tags/v0.16.0
+depends=(
+    'callaudiod'
+    'evince'
+    'evolution-data-server'
+    'feedbackd'
+    'gcr'
+    'gtk3'
+    'libadwaita'
+    'libhandy'
+    'libnm'
+    'libpulse'
+    'gnome-desktop'
+    'gnome-session'
+    'gnome-shell'
+    'phoc'
+    'squeekboard'
+    'upower'
+)
+makedepends=(
+    'git'
+    'meson'
+    'ninja'
+    'wayland-protocols'
+)
+checkdepends=('xorg-server-xvfb')
+install="$pkgname.install"
+_commit="62a4ba9d8a38750a49ae6187f3497c54a030be45" # tags/v0.36.0
 source=("phosh::git+https://gitlab.gnome.org/World/Phosh/phosh.git#commit=${_commit}"
         'pam_phosh'
-        'sm.puri.OSK0.desktop'
         'phosh.service')
 
 pkgver() {
@@ -26,8 +48,12 @@ prepare() {
 }
 
 build() {
-    arch-meson phosh output -Dsystemd=true
+    arch-meson phosh output --libexecdir=/usr/lib/$pkgname -Dphoc_tests=disabled -Dsystemd=true
     ninja -C output
+}
+
+check() {
+    xvfb-run ninja test -C output
 }
 
 package() {
@@ -37,11 +63,10 @@ package() {
         "$pkgdir"/usr/lib/systemd/system/phosh.service
     install -Dm644 "$srcdir"/pam_phosh \
         "$pkgdir"/etc/pam.d/phosh
-    install -Dm644 "$srcdir"/sm.puri.OSK0.desktop \
-        "$pkgdir"/usr/share/applications/sm.puri.OSK0.desktop
+    mkdir -p "$pkgdir"/usr/share/applications
+    ln -s sm.puri.Squeekboard.desktop "$pkgdir"/usr/share/applications/sm.puri.OSK0.desktop
 }
 
 md5sums=('SKIP'
          '6d5a0d561f8362bf91f85c236a88395d'
-         '30c7febb5cbbac40984fb50d66a88639'
-         '60c659ae0e643bb63f7fbc484a8d9666')
+         '8d95d47dba9aede4db4e643d59749093')

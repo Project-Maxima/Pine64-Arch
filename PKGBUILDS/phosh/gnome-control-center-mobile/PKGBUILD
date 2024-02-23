@@ -4,103 +4,129 @@
 
 _pkgname=gnome-control-center
 pkgname=gnome-control-center-mobile
-pkgver=41.4
+pkgver=45.2
 pkgrel=1
 pkgdesc="GNOME's main interface to configure various aspects of the desktop - Purism fork"
-url="https://source.puri.sm/Librem5/gnome-control-center"
-license=(GPL2)
+url="https://gitlab.gnome.org/GNOME/gnome-control-center"
+license=(GPL3)
 arch=(x86_64 armv7h aarch64)
-depends=(accountsservice cups-pk-helper gnome-bluetooth gnome-desktop
-         gnome-online-accounts gnome-settings-daemon gsettings-desktop-schemas gtk3
-         libgtop nm-connection-editor sound-theme-freedesktop upower libpwquality
-         gnome-color-manager smbclient libmm-glib libgnomekbd libibus
-         libgudev bolt udisks2 libhandy gsound colord-gtk modemmanager power-profiles-daemon)
-makedepends=(docbook-xsl git python meson)
-checkdepends=(python-dbusmock python-gobject xorg-server-xvfb)
-optdepends=('system-config-printer: Printer settings'
-            'gnome-user-share: WebDAV file sharing'
-            'gnome-remote-desktop: screen sharing'
-            'rygel: media sharing'
-            'openssh: remote login')
+depends=(
+  accountsservice
+  bolt
+  cairo
+  colord-gtk4
+  cups-pk-helper
+  dconf
+  fontconfig
+  gcr
+  gdk-pixbuf2
+  glib2
+  gnome-bluetooth-3.0
+  gnome-color-manager
+  gnome-desktop-4
+  gnome-online-accounts
+  gnome-settings-daemon
+  gnutls
+  gsettings-desktop-schemas
+  gsound
+  gtk3
+  gtk4
+  hicolor-icon-theme
+  krb5
+  libadwaita
+  libcolord
+  libcups
+  libepoxy
+  libgoa
+  libgtop
+  libgudev
+  libibus
+  libmm-glib
+  libnm
+  libnma-gtk4
+  libpulse
+  libpwquality
+  libsecret
+  libwacom
+  libx11
+  libxi
+  libxml2
+  modemmanager
+  pango
+  polkit
+  smbclient
+  sound-theme-freedesktop
+  tecla
+  udisks2
+  upower
+)
+makedepends=(
+  docbook-xsl
+  git
+  meson
+  python
+)
+checkdepends=(
+  python-dbusmock
+  python-gobject
+  xorg-server-xvfb
+)
+optdepends=(
+  'fwupd: device security panel'
+  'gnome-remote-desktop: screen sharing'
+
+  # Cannot be a depend because when gnome-shell checkdepends on
+  # gnome-control-center depends on gnome-shell depends on libmutter-12.so, it
+  # makes building gnome-shell against libmutter-13.so impossible
+  'gnome-shell: multitasking panel'
+
+  'gnome-user-share: WebDAV file sharing'
+  'networkmanager: network settings'
+  'openssh: remote login'
+  'power-profiles-daemon: power profiles'
+  'rygel: media sharing'
+  'system-config-printer: printer settings'
+)
 provides=(gnome-control-center)
 conflicts=(gnome-control-center)
-_commit=d08fac3f0be63f0a4c65d26f47d3b77f8738cfab  # tags/41.4^0
-source=("git+https://gitlab.gnome.org/GNOME/gnome-control-center.git#commit=$_commit"
-        "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
-        # purism
-        0001-Add-helper-for-new-connection-editor.patch
-        0001-Add-new-connection-editor.patch
-        0002-wifi-Use-new-connection-editor.patch
-        0020-user-panel-Hide-automatic-login-switch.patch
-        0002-UserAccount-fix-window-resizing-issue.patch
-        0001-avatar-chooser-Adapt-to-work-on-librem5.patch
-        0002-datetime-Fix-timezone-selection-map.patch
-        0003-display-Request-a-smaller-size-for-arrangment-widget.patch
-        0004-online-accounts-Make-edit-account-dialog-resizable.patch
-        0005-power-show-brightness-slider-in-a-separate-row.patch
-        0006-sound-fix-test-dialog-on-small-screen.patch
-        0007-UserAccount-Allow-stack-to-have-different-size.patch
-        Add-patches-to-check-if-phone.patch
-        display-Let-button-box-have-vertical-orientation-on-.patch
-        user-accounts-Constrain-passwords-to-digits-on-phone.patch
-        Add-form-factors-to-desktop-and-appdata-files.patch
-        # mobian
-        0002-search-ellipsize-button-label-to-fit-small-screens.patch
-        0003-usage-ellipsize-labels-to-fit-small-screens.patch
-        0004-power-add-more-suspend-timing-options.patch
-        0005-applications-ellipsize-title-label-to-always-fit-sma.patch
-        fix-40-wifi-panel.patch
-        fix-region-panel-width.patch
-        common-Wrap-all-subtitles.patch
-        fix-keyboard-panel-width.patch
-        fix-region-login-width.patch
-        # backport
-        shell-Mirror-the-main-leaflet-s-folded-property.patch
-        display-Use-ComboBox-when-folded.patch)
+_commit=cc5da95fecaeb5486435c54917edf9633addc02d  # tags/45.2^0
+source=(
+  "git+https://gitlab.gnome.org/GNOME/gnome-control-center.git#commit=$_commit"
+  "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
+  'pixmaps-dir.diff'
+  # purism
+  '0001-avatar-chooser-Adapt-to-work-on-librem5.patch'
+  '0005-power-show-brightness-slider-in-a-separate-row.patch'
+  'Add-patches-to-check-if-phone.patch'
+  'network-connection-editor-Allow-dialog-to-resize.patch'
+  # mobian
+  '0004-power-add-more-suspend-timing-options.patch'
+  'resize-connection-editor.patch'
+)
 sha256sums=('SKIP'
             'SKIP'
-            '7b95b411a57a8c1370501dd3125a84edc72867bbb4eb7c81032324275aee21c6'
-            '2981fafba96437664fe13475f4ddfcf3fa09df3f96e9ebb5ddb823fad1488f6b'
-            '3b59597701f882c578a54f13ba80b3c5d67bc867c352ef433b397842c3e6bfdd'
-            'b79ecab796c5e5225b6e3acc24950b784fd95d7c6687f8dda355a61907f041a2'
-            '21d64ba6f82e87ccb2f7bdee3daa31afa7066a7ad4675d758acdfbaad5d9ba4b'
-            '9105709f02bca61bc553362411c4f8dd5d859595b8f2beb3649f9006be8a1f43'
-            '6c5642e3d7dc70fb893d90280e8ce690ff875c823793b0ab5253089c1454d800'
-            'd23001682f7e6d7f1d8be685a5f4dac0468ef4d4b0229ee2f8e648a1df17bf86'
-            'fab78767187fd7ff93b2bb58e87f8017adad1be13700ca6027cc5acca691843d'
-            '67a80e9b5675d6014d7869ffc184e0e9aa1412d54e28bc03e019ea5aa2c3f961'
-            '28a4af4c3a28d5ce6b5eece7f1d17c9526f6581cdc7711988758dfc740c8745b'
-            '8594961c60ec102293f2255c9c234cd6be167c5f3a90f4c9efec55eedb5a8b72'
-            '0d0ff223883a389659d2caeacfa5e99216c31ca3b1ce6cde1af41b4c24e5a90b'
-            'e85b8db2dc391a14399de27ab29ff8b422b59c99f4f708291299a7b3ae0e2928'
-            'e94b629f89d7a39081f28a0115f239dce2c27b91e097c7b4725a870de8f825e6'
-            'dcec5bdeb4d4acb63bef88ffb091cdf33abf1291515a86e52e947f8e5f8b5e15'
-            'fa94c0acdc424333fe0c7a4af8a5fc410aa9e7ded5c41357e591f7184f50be5b'
-            '079d5cce161a9acbecd302c88676520d60eb9c53a9d832efad21430769c5567e'
-            '888ffb3307a7ec23faeb8bcda0f4ca16e6f28c705a6675bb46f007e525da651b'
-            'ed28a82d49be98082f7031a6031a1a748d8492dd85ecaeae47c0caef24033c6d'
-            'c3b2bce67a5193e91f6d5e4eb85619c0986bf7684c6f7df898abc95c72372a16'
-            'eacfba80f6cc6c82f6d27b3c2cf3b5f62509e3241ca8971ddd34849b95ab95f2'
-            'a44f1417e6cebeb5f68cf747b3a752392eb00b55fc472bcd9b2d5f6814a2e4b7'
-            '4cacc517e85c00e9751343e0301aa3b23beaf112c7681269c807a79355e9a59b'
-            '415b29ddf4601b7cb4ddb1ecdb0e7a6b8347210a8fa75654b06ba63aff2c7e7b'
-            '7f1ac5a0cdb74c4400c743f836f7c052fceee0da9cc267c9752ddc1bd2d945da'
-            '8b89bd38a48d58fdf102ea10f6f7e8351985cffede13e58560cfb127175a62fc')
+            '6f9e9c8607b9a3b7efe5a17a98a9d1db8b7321d0d1b3bca30b45790bd438d91e'
+            '062e53654e8662ed53743b4c652b7b41c5c2993a713337626c832d0af3eda015'
+            'e51f740175e82d6a399080dfb514b95923dc9b1230b447df2a47c1f7e24ef3e9'
+            '09e36b0aa2c40d6b6f5be11fd9617223d5b142ff8b50db6fce0eeebc63007327'
+            '644b076297beba48a1d2752121c4c0cca143b12ae5e737d1b4e2ee2fb8abb5f7'
+            '36696693a2fa7ba74ec6d5b94d97f5dbafbec14b16af3d832395a55d382f0a1f'
+            '6bef98e21e0ab11e24ddcdab94771e22c37978b34ba3d0c3029822e5594aaf93')
 
 pkgver() {
   cd ${_pkgname}
-  git describe --tags | sed 's/^GNOME_CONTROL_CENTER_//;s/_/./g;s/-/+/g'
+  git describe --tags | sed 's/[^-]*-g/r&/;s/-/+/g'
 }
 
 prepare() {
   cd ${_pkgname}
 
   # Install bare logos into pixmaps, not icons
-  sed -i "/install_dir/s/'icons'/'pixmaps'/" panels/info-overview/meson.build
+  git apply -3 ../pixmaps-dir.diff
 
-  git submodule init
+  git submodule init subprojects/gvc
   git submodule set-url subprojects/gvc "$srcdir/libgnome-volume-control"
-  git submodule update
+  git -c protocol.file.allow=always submodule update
 
   local src
   for src in "${source[@]}"; do
@@ -113,12 +139,17 @@ prepare() {
 }
 
 build() {
-  arch-meson ${_pkgname} build -Dcheese=false
+  local meson_options=(
+    -D documentation=true
+  )
+
+  arch-meson ${_pkgname} build "${meson_options[@]}"
   meson compile -C build
 }
 
 check() {
-  meson test -C build --print-errorlogs
+  GTK_A11Y=none dbus-run-session xvfb-run -s '-nolisten local +iglx -noreset' \
+    meson test -C build --print-errorlogs
 }
 
 package() {

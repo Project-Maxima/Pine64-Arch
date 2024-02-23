@@ -4,8 +4,8 @@
 buildarch=8
 
 pkgname=uboot-pinephone
-pkgver=2022.01
-pkgrel=4
+pkgver=2024.01
+pkgrel=1
 pkgdesc="U-Boot for PinePhone"
 arch=('aarch64')
 url='http://www.denx.de/wiki/U-Boot/WebHome'
@@ -15,10 +15,10 @@ makedepends=('bc' 'python' 'swig' 'dtc' 'python-setuptools')
 install=${pkgname}.install
 backup=("boot/boot.txt")
 
-_commit_atf="d005bfcdff423fc84f03c657e0dcdb4b45621b22"
+_commit_atf="b6c0948400594e3cc4dbb5a4ef04b815d2675808" # v2.10.0
 
 source=("https://ftp.denx.de/pub/u-boot/u-boot-${pkgver/rc/-rc}.tar.bz2"
-        "arm-trusted-firmware-$_commit_atf.tar.gz::https://github.com/crust-firmware/arm-trusted-firmware/archive/${_commit_atf}.tar.gz"
+        "arm-trusted-firmware-$_commit_atf.tar.gz::https://github.com/ARM-software/arm-trusted-firmware/archive/${_commit_atf}.tar.gz"
         '0001-ATF-set-fno-stack-protector.patch'
         '0001-expose-DRAM-clock-speed.patch'
         'Improve-Allwinner-A64-timer-workaround.patch'
@@ -27,16 +27,16 @@ source=("https://ftp.denx.de/pub/u-boot/u-boot-${pkgver/rc/-rc}.tar.bz2"
         'mkscr'
         'update-u-boot'
         'scp.bin')
-md5sums=('49ba74a214d14c6340c8067bc1ed5fa0'
-         '0724b567a680e98d3240648ea14183ba'
+md5sums=('a020c6e24bfeb19a455c920a48ab9976'
+         '8c02a3c1f5a2f2e85fdee456ebe5efd0'
          '348a6943a1c220047ce5312b59da95b6'
-         '061a510280d16bddf16679cf0d23bf6e'
+         '94be8e4e552213ca3820d2d4ef76e9a8'
          '98ad5f31b1d7ff2e6e03555f29ebc6e6'
          'fb9def68f0b44c69f88f7923e21379cc'
-         '06c27a80909035513aac45036e8d954b'
+         '64ea169521b0a136bc383f5388598110'
          '021623a04afd29ac3f368977140cfbfd'
-         'c251a9b0601caa3dd6b805aa0889660f'
-         '90616d501a12d6f7a12c4349f789c343')
+         '5f85361d1d5ce47ff11ec4009cc2e18a'
+         'c60f45624f84b2f087b9208381c8c235')
 
 prepare() {
   cd arm-trusted-firmware-${_commit_atf}
@@ -55,8 +55,8 @@ build() {
 
   cd arm-trusted-firmware-${_commit_atf}
 
-  make PLAT=sun50i_a64 DEBUG=1 bl31
-  cp build/sun50i_a64/debug/bl31.bin ../u-boot-${pkgver/rc/-rc}
+  make PLAT=sun50i_a64 DEBUG=0 bl31 SUNXI_AMEND_DTB=1
+  cp build/sun50i_a64/release/bl31.bin ../u-boot-${pkgver/rc/-rc}
 
   cd ../u-boot-${pkgver/rc/-rc}
 
